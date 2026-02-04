@@ -1,7 +1,7 @@
 i = 0
-c = 0
+s = 0
 while i < 20:
-    c = c + i
+    s = s + i
     i = i + 1
 
-print(c)
+print(s)
