@@ -9,7 +9,7 @@ def function(bases):
     G = 0
     T = 0
     for j in range(0, len(bases)):
-
+# usamos el .strip() para eliminar el endofline character
         length = len(bases[j].strip())
         base = bases[j].strip()
         for i in range(0, length):
@@ -24,4 +24,7 @@ def function(bases):
             total_bases += 1
     return A, G, T, C, total_bases
 
-print(function(bases))
+print(function(bases)) # para importar funciones de otros files para meterlo en un ejercicio en el que te interese
+# meter la funcion y es lo haces con: from la file de la que lo quieras importar import y el nombre de la funcion
+# para importar de forma segura lo mejor que puedes hacer es meterlo todo en una funcion y poner if__name__ == "__main()--":
+#                                                                                                main()
