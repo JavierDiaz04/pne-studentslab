@@ -1,4 +1,7 @@
-bases = ["AGTACACTGGT", "ACCAGTGTACT", "ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG"]
+# bases = ["AGTACACTGGT", "ACCAGTGTACT", "ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG"]
+f = open("dna.txt", "r")
+bases = f.readlines()
+f.close()
 def function(bases):
     total_bases = 0
     A = 0
@@ -6,9 +9,10 @@ def function(bases):
     G = 0
     T = 0
     for j in range(0, len(bases)):
-        length = len(bases[j])
-        base = bases[j]
-        for i in range(0, len(base)):
+
+        length = len(bases[j].strip())
+        base = bases[j].strip()
+        for i in range(0, length):
             if base[i] == 'A':
                 A += 1
             elif base[i] == 'G':
