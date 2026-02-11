@@ -1,0 +1,11 @@
+text = "  Hello, World! Welcome to Python Programming.  "
+text1 = text.strip()
+print(text1)
+words = text.split()
+print(len(words))
+capitalize = text.title()
+print(capitalize)
+print(text.startswith("Hello"))
+print(text.endswith("ing"))
+print(text.find("Python"))
+print( " - ".join(words))
