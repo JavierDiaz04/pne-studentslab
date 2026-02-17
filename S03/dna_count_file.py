@@ -26,5 +26,5 @@ def function(bases):
 
 print(function(bases)) # para importar funciones de otros files para meterlo en un ejercicio en el que te interese
 # meter la funcion y es lo haces con: from la file de la que lo quieras importar import y el nombre de la funcion
-# para importar de forma segura lo mejor que puedes hacer es meterlo todo en una funcion y poner if__name__ == "__main()--":
+# para importar de forma segura lo mejor que puedes hacer es meterlo todo en una funcion y poner if__name__ == "__main()__":
 #                                                                                                main()
