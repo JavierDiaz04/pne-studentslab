@@ -78,73 +78,62 @@ while True:
         # -- into a human-redeable string
         msg = msg_raw.decode()
         x = msg.split(" ")
-        if x[0] == "PING":
-            print(f"PING Command!")
+        cmd = x[0]
+
+        response = ""
+
+        if cmd == "PING":
+            print("PING Command!")
             response = "OK\n"
 
-        if x[0] == "GET":
-            if x[1] == "0":
-                response = "AAAGGGTTTCCCAAAAA"
-            if x[1] == "1":
-                response = "AAAGGGTTTCCCAGGGG"
-            if x[1] == "2":
-                response = "AAAGGGTTTCCCAAGGG"
-            if x[1] == "3":
-                response = "AAAGGGTTTCCCAAAGG"
-            if x[1] == "4":
-                response = "AAAGGGTTTCCCAAAAG"
-        if x[0] == "INFO":
+        elif cmd == "GET":
+            seqs = {
+                "0": "AAAGGGTTTCCCAAAAA",
+                "1": "AAAGGGTTTCCCAGGGG",
+                "2": "AAAGGGTTTCCCAAGGG",
+                "3": "AAAGGGTTTCCCAAAGG",
+                "4": "AAAGGGTTTCCCAAAAG"
+            }
+            response = seqs.get(x[1], "ERROR")
+
+        elif cmd == "INFO":
             seq1 = x[1]
             s = Seq(seq1)
             dict_result = s.count_bases2()
 
-            response = ""
-            response += f"Sequence: {seq1}\n"
+            response = f"Sequence: {seq1}\n"
             response += f"Total length: {len(seq1)}\n"
             for base in ["A", "C", "G", "T"]:
-                    response += f"{base}: {dict_result[base]['times']} ({dict_result[base]['percentage']}%)\n"
-
-        if x[0] == "COMP":
+                response += f"{base}: {dict_result[base]['times']} ({dict_result[base]['percentage']}%)\n"
+            elif cmd == "COMP":
             seq1 = x[1]
             print(seq1)
             s = Seq(seq1)
-            result = s.seq_complement()
-            response = result
+            response = s.seq_complement()
 
-        if x[0] == "REV":
+        elif cmd == "REV":
             seq1 = x[1]
             print(seq1)
             s = Seq(seq1)
-            result = s.reverse()
-            response = result
+            response = s.reverse()
 
-        if x[0] == "GENE":
-            if x[1] == "U5":
-                U5 = "../S04/sequences/U5.txt"
+        elif cmd == "GENE":
+            gene = x[1]
+            gene_files = {
+                "U5": "../S04/sequences/U5.txt",
+                "ADA": "../S04/sequences/ADA.txt",
+                "FRAT1": "../S04/sequences/FRAT1.txt",
+                "FXN": "../S04/sequences/FXN.txt",
+                "RNU6_269P": "../S04/sequences/RNU6_269P.txt"
+            }
+
+            if gene in gene_files:
                 s1 = Seq()
-                s11 = s1.seq_read_fasta(U5)
-                response = s11
-        if x[1] == "ADA":
-            ADA = "../S04/sequences/ADA.txt"
-            s1 = Seq()
-            s11 = s1.seq_read_fasta(ADA)
-            response = s11
-        if x[1] == "FRAT1":
-            FRAT1 = "../S04/sequences/FRAT1.txt"
-            s1 = Seq()
-            s11 = s1.seq_read_fasta(FRAT1)
-            response = s11
-        if x[1] == "FXN":
-            FXN = "../S04/sequences/FXN.txt"
-            s1 = Seq()
-            s11 = s1.seq_read_fasta(FXN)
+                response = s1.seq_read_fasta(gene_files[gene])
+            else:
+                response = "ERROR: Gene not found"
 
-                response = s11
-        if x[1] == "RNU6_269P":
-            RNU6_269P = "../S04/sequences/RNU6_269P.txt"
-            s1 = Seq()
-            s11 = s1.seq_read_fasta(RNU6_269P)
-            response = s11
+
 
     cs.send(response.encode())
 
