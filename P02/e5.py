@@ -1,4 +1,4 @@
-from client0 import Client
+from P03.client0 import Client
 from Seq1 import Seq
 
 print("-----| Practice 2, Exercise 6 |------")

@@ -1,4 +1,4 @@
-from client0 import Client
+from P03.client0 import Client
 from Seq1 import Seq
 FRAT1 = "../S04/sequences/FRAT1.txt"
 s = Seq()
