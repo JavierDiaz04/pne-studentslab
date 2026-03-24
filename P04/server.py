@@ -3,7 +3,7 @@ import termcolor
 
 
 # -- Server network parameters
-IP = "127.0.0.1"
+IP = "192.168.0.128"
 PORT = 8080
 PATH = "./P04/"
 
@@ -16,7 +16,6 @@ def process_client(s):
 
     # -- Split the request messages into lines
     lines = req.split('\n')
-
     # -- The request line is the first
     req_line = lines[0]
 
@@ -31,16 +30,22 @@ def process_client(s):
     # Body (content to send)
 
     # -- Let's start with the body
+    link = str(req_line).split(" ")[1]
+    if link == "/":
+        file = PATH + "html/index.html"
+        content = open(file)
+    else:
+        try:
+            file = PATH + "html" + str(req_line).split(" ")[1] + ".html"
+            content = open(file)
 
-    try:
-        file_path = PATH + "html" + str(req_line).split(" ")[1] + ".html"
-        content = open(file_path)
-        body = content.read()
-        content.close()
-    except FileNotFoundError:
-        body = ""
+        except FileNotFoundError:
+            file = PATH + "html/error.html"
+            content = open(file)
 
-    print("body = " + body)
+    body = content.read()
+    content.close()
+    # print("body = " + body)
 
     # -- Status line: We respond that everything is ok (200 code)
     status_line = "HTTP/1.1 200 OK\n"
@@ -49,7 +54,7 @@ def process_client(s):
     header = "Content-Type: text/html\n"
 
     # -- Add the Content-Length
-    header += f"Content-Length: {len(body)} \n" #{len(body)}\n
+    header += f"Content-Length: {len(body)} \n"  # {len(body)}\n
 
     # -- Build the message by joining together all the parts
     response_msg = status_line + header + "\n" + body

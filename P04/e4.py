@@ -31,9 +31,10 @@ def process_client(s):
     # Body (content to send)
 
     # -- Let's start with the body
-    
+
     try:
-        file = PATH + "html" + str(req_line).split(" ")[1] + ".html"
+        path = str(req_line).split(" ")[1]
+        file = PATH + "html" + path + ".html"
         content = open(file)
         body = content.read()
         content.close()

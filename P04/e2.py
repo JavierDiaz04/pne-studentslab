@@ -31,10 +31,10 @@ def process_client(s):
     # Body (content to send)
 
     # -- Let's start with the body
-    
+
     try:
-        file = PATH + "html" + str(req_line).split(" ")[1] + ".html"
-        content = open(file)
+        file_path = PATH + "html" + str(req_line).split(" ")[1] + ".html"
+        content = open(file_path)
         body = content.read()
         content.close()
     except FileNotFoundError:
