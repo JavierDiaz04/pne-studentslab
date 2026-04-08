@@ -1,10 +1,13 @@
 import http.server
 import socketserver
 import termcolor
+import os
 
 # Define the Server's port
 PORT = 8080
-PATH = "./S14/pages/"
+
+# Ruta correcta según el enunciado
+PATH = "./P05/html"
 
 
 class TestHandler(http.server.BaseHTTPRequestHandler):
@@ -15,60 +18,57 @@ class TestHandler(http.server.BaseHTTPRequestHandler):
         # Print the request line
         termcolor.cprint("  " + self.requestline, 'green')
 
-        # Print the command received (should be GET)
         print("  Command: " + self.command)
 
         try:
+            # Si piden "/" → index.html
             if self.path == "/":
-                page = open(PATH + "/index.html")
+                filepath = PATH + "/index.html"
             else:
-                page = open(PATH + self.path)
+                # Construir ruta completa
+                filepath = PATH + self.path
 
-            contents = page.read()
-            page.close()
+            # Normalizar ruta (evita errores con "//")
+            filepath = os.path.normpath(filepath)
 
-            response_code = 200
+            # Intentar abrir archivo
+            with open(filepath, "r") as page:
+                contents = page.read()
+                response_code = 200
+
         except FileNotFoundError:
-            page = open(PATH + "/error.html")
-            contents = page.read()
-            page.close()
-            response_code = 404
+            # Si no existe → error.html
+            with open(PATH + "/error.html", "r") as page:
+                contents = page.read()
+                response_code = 404
 
+        # Enviar respuesta
         self.send_response(response_code)
-        style = "text/html"
 
-        termcolor.cprint(self.requestline, 'green')
+        # Tipo de contenido
+        self.send_header('Content-Type', 'text/html')
+        self.send_header('Content-Length', str(len(contents.encode())))
 
-        # Define the content-type header:
-        self.send_header('Content-Type', style)
-        self.send_header('Content-Length', len(contents.encode()))
-
-        # The header is finished
         self.end_headers()
 
-        # Send the response message
+        # Enviar HTML al cliente
         self.wfile.write(contents.encode())
 
         return
 
 
-# -- This is for preventing the error: "Port already in use"
+# Evitar error de puerto ocupado
 socketserver.TCPServer.allow_reuse_address = True
 
-# ------------------------
-# - Server MAIN program
-# ------------------------
-# -- Set the new handler
+# Handler
 Handler = TestHandler
 
-# -- Open the socket server
+# Servidor
 with socketserver.TCPServer(("", PORT), Handler) as httpd:
-    print("Serving at PORT",
-          PORT)  # -- Main loop: Attend the client. Whenever there is a new client, the handler is called
+    print("Serving at PORT", PORT)
 
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("")
-        print("Stopped by the user")
+        print("\nStopped by the user")
         httpd.server_close()
