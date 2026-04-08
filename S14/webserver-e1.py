@@ -1,44 +1,62 @@
 import http.server
 import socketserver
+import termcolor
 
-# Define el puerto
+# Define the Server's port
 PORT = 8080
-
-# Permite reutilizar el puerto
-socketserver.TCPServer.allow_reuse_address = True
+PATH = "./S14/pages/"
 
 
-# Creamos nuestro handler personalizado
 class TestHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
-        # Si la ruta es la principal "/"
-        if self.path == "/":
-            contents = "Welcome to my server"
-            self.send_response(200)
-        else:
-            contents = "Resource not available"
-            self.send_response(404)
+        print("GET received! Request line:")
 
-        # Cabeceras
-        self.send_header("Content-Type", "text/plain")
-        self.send_header("Content-Length", len(contents.encode()))
+        # Print the request line
+        termcolor.cprint("  " + self.requestline, 'green')
+
+        # Print the command received (should be GET)
+        print("  Command: " + self.command)
+
+        if self.path == "/":
+            self.send_response(200)
+            contents = "Welcome to my server"
+        else:
+            self.send_response(404)
+            contents = "Resource not available"
+
+        termcolor.cprint(self.requestline, 'green')
+
+        # Define the content-type header:
+        self.send_header('Content-Type', "text/plain")
+        self.send_header('Content-Length', len(contents.encode()))
+
+        # The header is finished
         self.end_headers()
 
-        # Enviar respuesta
+        # Send the response message
         self.wfile.write(contents.encode())
 
+        return
 
-# Usamos nuestro handler
+
+# -- This is for preventing the error: "Port already in use"
+socketserver.TCPServer.allow_reuse_address = True
+
+# ------------------------
+# - Server MAIN program
+# ------------------------
+# -- Set the new handler
 Handler = TestHandler
 
-# Crear y lanzar el servidor
+# -- Open the socket server
 with socketserver.TCPServer(("", PORT), Handler) as httpd:
-
-    print("Serving at PORT", PORT)
+    print("Serving at PORT",
+          PORT)  # -- Main loop: Attend the client. Whenever there is a new client, the handler is called
 
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("Server Stopped!")
+        print("")
+        print("Stopped by the user")
         httpd.server_close()
