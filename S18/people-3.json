@@ -1,0 +1,70 @@
+{
+  "people": [
+    {
+      "name": "Troll Face",
+      "age": 20,
+      "phone_numbers": [
+        {
+          "type": "home",
+          "number": "1111"
+        },
+        {
+          "type": "office",
+          "number": "333"
+        }
+      ]
+    },
+    {
+      "name": "Sax Guy",
+      "age": 40,
+      "phone_numbers": [
+        {
+          "type": "home",
+          "number": "9999-564"
+        }
+      ]
+    },
+    {
+      "name": "Ricky Rickroll",
+      "age": 60,
+      "phone_numbers": [
+        {
+          "type": "dance floor",
+          "number": "6766534"
+        },
+        {
+          "type": "mobile",
+          "number": "333"
+        },
+        {
+          "type": "fortnite",
+          "number": "88778"
+        }
+      ]
+    },
+    {
+      "name": "John Doe",
+      "age": 30,
+      "phone_numbers": [
+        {
+          "type": "home",
+          "number": "1234"
+        }
+      ]
+    },
+    {
+      "name": "Jane Smith",
+      "age": 25,
+      "phone_numbers": [
+        {
+          "type": "mobile",
+          "number": "5678"
+        },
+        {
+          "type": "work",
+          "number": "91011"
+        }
+      ]
+    }
+  ]
+}
