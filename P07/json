@@ -1,0 +1,5 @@
+{
+  "server": "rest.ensembl.org",
+  "endpoint": "/info/ping",
+  "params": "?content-type=application/json"
+}
