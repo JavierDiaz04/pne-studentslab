@@ -1,83 +1,58 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
-import requests
+import urllib.request
 import json
 
 PORT = 8080
 
 
+def call_ensembl(url):
+    """Simple helper to call Ensembl API without external libraries"""
+    try:
+        with urllib.request.urlopen(url) as response:
+            return json.loads(response.read().decode())
+    except:
+        return None
+
+
+def error_html(msg):
+    return f"""
+    <html>
+    <body style="font-family:Arial">
+        <h2 style="color:red;">Error</h2>
+        <p>{msg}</p>
+        <a href="/">Go back</a>
+    </body>
+    </html>
+    """
+
 
 MAIN_PAGE = """
-<!DOCTYPE html>
 <html>
 <head>
     <title>Genome Browser</title>
-    <style>
-        body {
-            font-family: Arial;
-            background-color: #f0f0f0;
-            margin: 40px;
-        }
-
-        h1 {
-            color: darkblue;
-        }
-
-form {
-    background-color: white;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 10px;
-}
-
-input[type=text], input[type=number] {
-    padding: 5px;
-    margin: 5px;
-}
-
-input[type=submit] {
-    padding: 8px;
-    background-color: darkblue;
-    color: white;
-    border: none;
-    border-radius: 5px;
-}
-
-.result {
-    background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-             }
-    </style>
 </head>
+<body style="font-family:Arial">
 
-<body>
+<h1>Genome Browser</h1>
 
-<h1>Browsing Human and Vertebrates Genome</h1>
-
-<form action="/listSpecies" method="get">
-    <h2>List Species</h2>
-    Limit:
-    <input type="number" name="limit">
-    <input type="submit" value="Get Species">
+<h3>List species</h3>
+<form action="/listSpecies">
+    Limit: <input name="limit" type="number">
+    <input type="submit" value="Send">
 </form>
 
-<form action="/karyotype" method="get">
-    <h2>Karyotype</h2>
-    Species:
-    <input type="text" name="species">
-    <input type="submit" value="Get Karyotype">
+<h3>Karyotype</h3>
+<form action="/karyotype">
+    Species: <input name="species" type="text">
+    <input type="submit" value="Send">
 </form>
 
-<form action="/chromosomeLength" method="get">
-    <h2>Chromosome Length</h2>
-    Species:
-    <input type="text" name="species">
-
-    Chromosome:
-    <input type="text" name="chromo">
-
-    <input type="submit" value="Get Length">
+<h3>Chromosome length</h3>
+<form action="/chromosomeLength">
+    Species: <input name="species" type="text">
+    Chromosome: <input name="chromo" type="text">
+    <input type="submit" value="Send">
 </form>
 
 </body>
@@ -85,225 +60,137 @@ input[type=submit] {
 """
 
 
-def error_page(message):
-    return f"""
-    <html>
-    <body style="font-family:Arial">
-        <h1 style="color:red">ERROR</h1>
-        <p>{message}</p>
-    </body>
-    </html>
-    """
-
-
-
-
-class GenomeHandler(BaseHTTPRequestHandler):
+class Server(BaseHTTPRequestHandler):
 
     def do_GET(self):
 
-        parsed = urlparse(self.path)
-        path = parsed.path
-        params = parse_qs(parsed.query)
+        url_parts = urlparse(self.path)
+        path = url_parts.path
+        args = parse_qs(url_parts.query)
 
-
+        # HOME
         if path == "/":
-
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-
             self.wfile.write(MAIN_PAGE.encode())
+            return
 
+        # LIST SPECIES
+        if path == "/listSpecies":
 
-        elif path == "/listSpecies":
+            data = call_ensembl("https://rest.ensembl.org/info/species?content-type=application/json")
 
-            url = "https://rest.ensembl.org/info/species?content-type=application/json"
-
-            response = requests.get(url)
-
-            if response.status_code != 200:
-                html = error_page("Could not connect to Ensembl API")
-
+            if not data:
+                html = error_html("Cannot get species data")
             else:
-                data = response.json()
+                species = data.get("species", [])
 
-                species_list = data["species"]
-
-                limit = None
-
-                if "limit" in params:
+                limit = args.get("limit", [None])[0]
+                if limit:
                     try:
-                        limit = int(params["limit"][0])
+                        limit = int(limit)
                     except:
                         limit = None
 
-                html = """
-                <html>
-                <body style="font-family:Arial">
-                <h1>Species List</h1>
-                <ul>
-                """
+                html = "<h1>Species</h1><ul>"
 
                 count = 0
-
-                for sp in species_list:
-
-                    html += f"<li>{sp['display_name']}</li>"
-
+                for s in species:
+                    html += f"<li>{s['display_name']}</li>"
                     count += 1
-
                     if limit and count >= limit:
                         break
 
-                html += """
-                </ul>
-                <a href="/">Back</a>
-                </body>
-                </html>
-                """
+                html += "</ul><a href='/'>Back</a>"
 
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-
             self.wfile.write(html.encode())
+            return
 
+        # KARYOTYPE
+        if path == "/karyotype":
 
-        elif path == "/karyotype":
+            species = args.get("species", [None])[0]
 
-            if "species" not in params:
-                html = error_page("Missing species parameter")
-
+            if not species:
+                html = error_html("Missing species")
             else:
 
-                species = params["species"][0]
-
                 url = f"https://rest.ensembl.org/info/assembly/{species}?content-type=application/json"
+                data = call_ensembl(url)
 
-                response = requests.get(url)
-
-                if response.status_code != 200:
-                    html = error_page("Species not found")
-
+                if not data:
+                    html = error_html("Species not found or API error")
                 else:
+                    karyotype = data.get("karyotype", [])
 
-                    data = response.json()
+                    html = f"<h1>Karyotype: {species}</h1><ul>"
 
-                    if "karyotype" not in data:
-                        html = error_page("No karyotype available")
+                    for c in karyotype:
+                        html += f"<li>{c}</li>"
 
-                    else:
-
-                        html = f"""
-                        <html>
-                        <body style="font-family:Arial">
-                        <h1>Karyotype of {species}</h1>
-                        <ul>
-                        """
-
-                        for chrom in data["karyotype"]:
-                            html += f"<li>{chrom}</li>"
-
-                        html += """
-                        </ul>
-                        <a href="/">Back</a>
-                        </body>
-                        </html>
-                        """
+                    html += "</ul><a href='/'>Back</a>"
 
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-
             self.wfile.write(html.encode())
+            return
 
+        # CHROMOSOME LENGTH
+        if path == "/chromosomeLength":
 
-        elif path == "/chromosomeLength":
+            species = args.get("species", [None])[0]
+            chromo = args.get("chromo", [None])[0]
 
-            if "species" not in params or "chromo" not in params:
-                html = error_page("Missing parameters")
-
+            if not species or not chromo:
+                html = error_html("Missing parameters")
             else:
 
-                species = params["species"][0]
-                chromo = params["chromo"][0]
-
                 url = f"https://rest.ensembl.org/info/assembly/{species}?content-type=application/json"
+                data = call_ensembl(url)
 
-                response = requests.get(url)
-
-                if response.status_code != 200:
-                    html = error_page("Species not found")
-
+                if not data:
+                    html = error_html("API error or species not found")
                 else:
-
-                    data = response.json()
 
                     found = False
-                    length = 0
+                    length = None
 
-                    for chrom in data["top_level_region"]:
-
-                        if chrom["name"] == chromo:
-                            length = chrom["length"]
+                    for c in data.get("top_level_region", []):
+                        if c["name"] == chromo:
+                            length = c["length"]
                             found = True
                             break
 
                     if not found:
-                        html = error_page("Chromosome not found")
-
+                        html = error_html("Chromosome not found")
                     else:
-
                         html = f"""
-                        <html>
-                        <body style="font-family:Arial">
-                        <h1>Chromosome Length</h1>
-
-                        <p>
-                        Species: <b>{species}</b>
-                        </p>
-
-                        <p>
-                        Chromosome: <b>{chromo}</b>
-                        </p>
-
-                        <p>
-                        Length: <b>{length}</b>
-                        </p>
-
-                        <a href="/">Back</a>
-
-                        </body>
-                        </html>
+                        <h1>Chromosome length</h1>
+                        <p>Species: {species}</p>
+                        <p>Chromosome: {chromo}</p>
+                        <p>Length: {length}</p>
+                        <a href='/'>Back</a>
                         """
 
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-
             self.wfile.write(html.encode())
+            return
 
-        # ---------------------------------------------
-        # INVALID ENDPOINT
-        # ---------------------------------------------
-        else:
-
-            html = error_page("Endpoint not found")
-
-            self.send_response(404)
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
-
-            self.wfile.write(html.encode())
+        # DEFAULT
+        html = error_html("Endpoint not found")
+        self.send_response(404)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(html.encode())
 
 
-# ---------------------------------------------------
-# MAIN
-# ---------------------------------------------------
-
-print(f"Server running on port {PORT}...")
-
-server = HTTPServer(("", PORT), GenomeHandler)
-
+print("Server running on http://localhost:8080")
+server = HTTPServer(("", PORT), Server)
 server.serve_forever()
